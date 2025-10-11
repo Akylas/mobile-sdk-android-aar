@@ -1,9 +1,8 @@
 plugins {
-    id 'com.android.library'
     id 'de.undercouch.download' version '5.1.1'
     id 'maven-publish'
+    id 'com.android.fused-library'
 }
-
 
 // Pass GitHub release URL and version as properties
 def aarUrl = project.findProperty("aarUrl") ?: System.getenv("AAR_URL") ?: ""
@@ -19,21 +18,12 @@ if (!libVersion) {
 // Where to store downloaded .aar
 def aarFile = file("$buildDir/libs/mylibrary.aar")
 
-android {
+androidFusedLibrary {
     namespace 'com.carto'
-    compileSdk 34
-    defaultConfig {
-        minSdk 21
-        targetSdk 34
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-        }
-    }
+    minSdk 21
 }
 dependencies {
-    implementation files(aarFile)
+    include files(aarFile)
 }
 // Task to download .aar from GitHub Release
 tasks.register('downloadAAR', de.undercouch.gradle.tasks.download.Download) {
@@ -43,26 +33,38 @@ tasks.register('downloadAAR', de.undercouch.gradle.tasks.download.Download) {
 }
 
 
-// Ensure download runs before build
-tasks.whenTaskAdded { task ->
-    if (task.name.startsWith('assemble') || task.name.startsWith('bundle')) {
-        task.dependsOn tasks.named('downloadAAR')
-    }
-}
-
+// Make the library tasks depend on the download
+// This is the safe way to ensure the download completes first
+tasks.matching { it.name.startsWith("pre") && it.name.endsWith("Build") }
+     .configureEach { dependsOn(tasks.named("downloadAAR")) }
 
 publishing {
-    singleVariant("release") {
-        withSourcesJar()
-    }
+   
     publications {
         release(MavenPublication) {
             groupId = 'com.carto'
             artifactId = 'carto-mobile-sdk'
             version = libVersion
 
+            // define artifact file
             afterEvaluate {
-                from components.findByName('release')
+                from components.fusedLibraryComponent
+            }
+
+            // Define this explicitly if using implementation or api configurations
+            pom.withXml {
+                def dependenciesNode = asNode()['dependencies'][0] ?: asNode().appendNode('dependencies')
+
+                // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.implementation.allDependencies.each {
+                    // Ensure dependencies such as fileTree are not included.
+                    if (it.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
             }
         }
     }
