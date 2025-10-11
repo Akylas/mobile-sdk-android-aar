@@ -1,9 +1,0 @@
-jdk:
-  - openjdk17
-
-gradle:
-  wrapper: true
-
-build:
-  commands:
-    - gradle assembleRelease -Pversion=5.0.0-rc.13 -PaarUrl=https://github.com/Akylas/mobile-sdk/releases/download/v5.0.0-rc.13/carto-mobile-sdk-android-5.0.0-rc.13.aar
