@@ -26,11 +26,15 @@ android {
         minSdk 21
         targetSdk 34
     }
-    dependencies {
-        implementation files(aarFile)
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
     }
 }
-
+dependencies {
+    implementation files(aarFile)
+}
 // Task to download .aar from GitHub Release
 tasks.register('downloadAAR', de.undercouch.gradle.tasks.download.Download) {
     src aarUrl
