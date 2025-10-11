@@ -1,8 +1,10 @@
-apply plugin: 'com.android.library'
+/ 1️⃣ Plugins block first
 plugins {
+    id 'com.android.library'
     id 'de.undercouch.download' version '5.1.1'
 }
 
+// 2️⃣ Optional buildscript block if needed for dependencies of the plugins
 buildscript {
     repositories {
         google()
@@ -17,8 +19,7 @@ android {
     compileSdk 34
     defaultConfig {
         minSdk 21
-        versionCode 1
-        versionName "1.0.0"
+        targetSdk 34
     }
 }
 
