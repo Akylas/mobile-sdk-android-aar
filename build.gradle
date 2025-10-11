@@ -1,3 +1,8 @@
+apply plugin: 'com.android.library'
+plugins {
+    id 'de.undercouch.download' version '5.1.1'
+}
+
 buildscript {
     repositories {
         google()
@@ -6,11 +11,6 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.12.1' // match your Gradle version
     }
-}
-
-apply plugin: 'com.android.library'
-plugins {
-    id 'de.undercouch.download' version '5.1.1'
 }
 
 android {
