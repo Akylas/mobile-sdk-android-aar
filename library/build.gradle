@@ -52,6 +52,9 @@ tasks.whenTaskAdded { task ->
 
 
 publishing {
+    singleVariant("release") {
+        withSourcesJar()
+    }
     publications {
         release(MavenPublication) {
             groupId = 'com.carto'
