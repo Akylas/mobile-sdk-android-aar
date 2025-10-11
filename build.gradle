@@ -8,8 +8,8 @@ buildscript {
     }
 }
 
+apply plugin: 'com.android.library'
 plugins {
-    id 'com.android.library'
     id 'de.undercouch.download' version '5.1.1'
 }
 
