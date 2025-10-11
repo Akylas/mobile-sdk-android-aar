@@ -1,8 +1,1 @@
 rootProject.name = "MyLibraryWrapper"
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
