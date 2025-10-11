@@ -6,11 +6,14 @@ plugins {
 
 
 // Pass GitHub release URL and version as properties
-def aarUrl = project.findProperty("aarUrl") ?: ""
-def libVersion = project.findProperty("version") ?: "1.0.0"
+def aarUrl = project.findProperty("aarUrl") ?: System.getenv("AAR_URL") ?: ""
+def libVersion = project.findProperty("version") ?: System.getenv("VERSION") ?: ""
 
 if (!aarUrl) {
     throw new GradleException("You must provide -PaarUrl=<url-to-aar>")
+}
+if (!libVersion) {
+    throw new GradleException("You must provide -Pversion=<version>")
 }
 
 // Where to store downloaded .aar
