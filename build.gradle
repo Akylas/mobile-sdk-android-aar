@@ -40,6 +40,12 @@ tasks.register("prepareAar") {
             into(layout.buildDirectory.dir("output/aar").get().asFile)
             rename { outputAarName }
         }
+        // Print the size
+        if (outputAar.get().asFile.exists()) {
+            println "Prepared AAR: ${outputAar.get().asFile}, size: ${outputAar.get().asFile.length()} bytes"
+        } else {
+            println "Error: AAR file not found after prepareArtifact"
+        }
     }
 }
 publishing {
