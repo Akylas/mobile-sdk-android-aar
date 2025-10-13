@@ -48,6 +48,10 @@ tasks.register("prepareAar") {
         }
     }
 }
+
+tasks.named("publish") {
+    dependsOn("prepareAar")
+}
 publishing {
    
     publications {
