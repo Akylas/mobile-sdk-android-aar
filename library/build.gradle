@@ -1,25 +1,39 @@
 plugins {
     id 'de.undercouch.download' version '5.1.1'
     id 'maven-publish'
-    id 'com.android.fused-library'
+    id 'com.android.library'
 }
 
 // Pass GitHub release URL and version as properties
 def libVersion = project.findProperty("version") ?: System.getenv("VERSION") ?: ""
+def aarUrl = project.findProperty("aarUrl") ?: System.getenv("AAR_URL") ?: ""
 
+if (!aarUrl) {
+    throw new GradleException("You must provide -PaarUrl=<url-to-aar>")
+}
 if (!libVersion) {
     throw new GradleException("You must provide -Pversion=<version>")
 }
+def downloadedAar = layout.buildDirectory.file("downloads/external-lib.aar")
 
 
-androidFusedLibrary {
+android {
+    compileSdk 34
     namespace 'com.carto'
-    minSdk 21
+    defaultConfig {
+        minSdk 21
+
+    }
 }
 dependencies {
-    include(project(":aar-wrapper"))
+    // include(project(":aar-wrapper"))
 }
 
+tasks.register('downloadAar', de.undercouch.gradle.tasks.download.Download) {
+    src aarUrl
+    dest downloadedAar
+    onlyIfModified true
+}
 publishing {
    
     publications {
@@ -29,8 +43,11 @@ publishing {
             version = libVersion
 
             // define artifact file
-            afterEvaluate {
-                from components.fusedLibraryComponent
+            // afterEvaluate {
+            //     from components.fusedLibraryComponent
+            // }
+            artifact(downloadedAar) {
+                builtBy(tasks.named("downloadAar"))
             }
         }
     }
