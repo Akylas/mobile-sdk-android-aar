@@ -5,14 +5,12 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.12.1' // match your Gradle version
-        // classpath 'com.android.fused-library:com.android.fused-library.gradle.plugin:8.13.0' // match your Gradle version
     }
 }
 
 plugins {
     id 'de.undercouch.download' version '5.1.1'
     id 'maven-publish'
-    // id 'com.android.library'
 }
 
 // Pass GitHub release URL and version as properties
@@ -26,16 +24,8 @@ if (!libVersion) {
     throw new GradleException("You must provide -Pversion=<version>")
 }
 def downloadedAar = layout.buildDirectory.file("downloads/external-lib.aar")
-def outputAar = "carto-mobile-sdk-android-${libVersion}.aar"
-
-// android {
-//     compileSdk 34
-//     namespace 'com.carto'
-//     defaultConfig {
-//         minSdk 21
-
-//     }
-// }
+def outputAarName = "carto-mobile-sdk-android-${libVersion}.aar"
+def outputAar = layout.buildDirectory.file("output/aar/$outputAarName")
 
 tasks.register('downloadAar', de.undercouch.gradle.tasks.download.Download) {
     src aarUrl
@@ -47,8 +37,8 @@ tasks.register("prepareAar") {
     doLast {
         copy {
             from(downloadedAar.get().asFile)
-            into(layout.buildDirectory.dir("libs").get().asFile)
-            rename { outputAar }
+            into(layout.buildDirectory.dir("output/aar").get().asFile)
+            rename { outputAarName }
         }
     }
 }
@@ -60,14 +50,7 @@ publishing {
             artifactId = 'carto-mobile-sdk'
             version = libVersion
 
-            // define artifact file
-            // afterEvaluate {
-            //     from components.fusedLibraryComponent
-            // }
-            // artifact(tasks.register("downloadExternalAar").get().outputs.files.singleFile) {
-            //     builtBy("downloadExternalAar")
-            // }
-            artifact(layout.buildDirectory.file("libs/$outputAar")) {
+            artifact(outputAar) {
                 builtBy(tasks.named("prepareAar"))
             }
         }
