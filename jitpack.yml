@@ -6,8 +6,6 @@ gradle:
 
 install:
   - ./gradlew publish
-  - mvn install:install-file -Dfile=build/output/carto-mobile-sdk-android-5.0.0-rc.13.aar -DgroupId=com.carto -DartifactId=carto-mobile-sdk -Dversion=5.0.0-rc.13 -Dpackaging=aar
-
 env:
    VERSION: "5.0.0-rc.13"
    AAR_URL: "https://github.com/Akylas/mobile-sdk/releases/download/v5.0.0-rc.13/carto-mobile-sdk-android-5.0.0-rc.13.aar"
