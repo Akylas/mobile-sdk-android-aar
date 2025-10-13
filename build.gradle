@@ -32,22 +32,6 @@ tasks.register('downloadExternalAar', de.undercouch.gradle.tasks.download.Downlo
     dest downloadedAar
     onlyIfModified true
 }
-tasks.register("prepareAar") {
-    dependsOn("downloadExternalAar")
-    doLast {
-        copy {
-            from(downloadedAar.get().asFile)
-            into(layout.buildDirectory.dir("output/aar").get().asFile)
-            rename { outputAarName }
-        }
-        // Print the size
-        if (outputAar.get().asFile.exists()) {
-            println "Prepared AAR: ${outputAar.get().asFile}, size: ${outputAar.get().asFile.length()} bytes"
-        } else {
-            println "Error: AAR file not found after prepareArtifact"
-        }
-    }
-}
 
 tasks.register("prepareArtifact") {
     dependsOn("downloadExternalAar")
@@ -57,9 +41,6 @@ tasks.register("prepareArtifact") {
     }
 }
 
-tasks.named("publish") {
-    dependsOn("prepareAar")
-}
 publishing {
    
     publications {
