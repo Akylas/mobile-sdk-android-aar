@@ -1,7 +1,4 @@
-rootProject.name = "MyLibraryWrapper"
-
-
-include ':library'
+include(":library", ":aar-wrapper")
 
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)

@@ -1,0 +1,77 @@
+plugins {
+    id 'com.android.library'
+    id 'de.undercouch.download' version '5.6.0'
+}
+
+// 2️⃣ Unpack it into the build intermediates
+def downloadedAar = layout.buildDirectory.file("downloads/external-lib.aar")
+def unpackDir = layout.buildDirectory.dir("unpacked-aar")
+def jarUnpackDir = layout.buildDirectory.dir("unpacked-classes")
+print("downloadedAar ${downloadedAar.get().asFile}")
+print("unpackDir ${unpackDir.get().asFile}")
+android {
+    namespace = "com.carto.aarwrapper"
+    compileSdk = 34
+    sourceSets {
+        main {
+            res.srcDir("${unpackDir.get().asFile}/res")
+            assets.srcDir("${unpackDir.get().asFile}/assets")
+            // manifest.srcFile("${unpackDir.get().asFile}/AndroidManifest.xml")
+            manifest.srcFile(layout.buildDirectory.file("prepared/AndroidManifest.xml"))
+            // Include JNI libs
+            jniLibs.srcDir("${unpackDir.get().asFile}/jni")
+        }
+    }
+}
+def aarUrl = project.findProperty("aarUrl") ?: System.getenv("AAR_URL") ?: ""
+
+if (!aarUrl) {
+    throw new GradleException("You must provide -PaarUrl=<url-to-aar>")
+}
+
+// 1️⃣ Download the AAR before compilation
+tasks.register('downloadAar', de.undercouch.gradle.tasks.download.Download) {
+    src aarUrl
+    dest downloadedAar
+    onlyIfModified true
+}
+
+
+tasks.register('unpackAar', Copy) {
+    dependsOn("downloadAar")
+    from(zipTree(downloadedAar))
+    into(unpackDir)
+}
+tasks.register("unpackClassesJar", Copy) {
+    dependsOn("unpackAar")
+    from(zipTree("${unpackDir.get().asFile}/classes.jar"))
+    into(jarUnpackDir)
+}
+android.libraryVariants.all { variant ->
+    variant.packageLibraryProvider.configure { packageTask ->
+        packageTask.from(jarUnpackDir)
+    }
+}
+
+tasks.register("prepareManifest") {
+    dependsOn("unpackClassesJar")
+    doLast {
+        def srcManifest = new File(unpackDir.get().asFile, "AndroidManifest.xml")
+        def destManifest = layout.buildDirectory.file("prepared/AndroidManifest.xml").get().asFile
+
+        def text = srcManifest.text.replaceFirst(/package=".*?"/, "")
+        destManifest.parentFile.mkdirs()
+        destManifest.text = text
+    }
+}
+
+// Make sure unpackAar runs before anything else
+tasks.named("preBuild") {
+    dependsOn("prepareManifest")
+}
+
+
+dependencies {
+    // After unpacking, add its classes.jar to the classpath
+    implementation(files("${unpackDir.get().asFile}/classes.jar"))
+}

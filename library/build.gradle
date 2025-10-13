@@ -5,38 +5,20 @@ plugins {
 }
 
 // Pass GitHub release URL and version as properties
-def aarUrl = project.findProperty("aarUrl") ?: System.getenv("AAR_URL") ?: ""
 def libVersion = project.findProperty("version") ?: System.getenv("VERSION") ?: ""
 
-if (!aarUrl) {
-    throw new GradleException("You must provide -PaarUrl=<url-to-aar>")
-}
 if (!libVersion) {
     throw new GradleException("You must provide -Pversion=<version>")
 }
 
-// Where to store downloaded .aar
-def aarFile = file("$buildDir/libs/mylibrary.aar")
 
 androidFusedLibrary {
     namespace 'com.carto'
     minSdk 21
 }
 dependencies {
-    include files(aarFile)
+    include(project(":aar-wrapper"))
 }
-// Task to download .aar from GitHub Release
-tasks.register('downloadAAR', de.undercouch.gradle.tasks.download.Download) {
-    src aarUrl
-    dest aarFile
-    overwrite true
-}
-
-
-// Make the library tasks depend on the download
-// This is the safe way to ensure the download completes first
-tasks.matching { it.name.startsWith("pre") && it.name.endsWith("Build") }
-     .configureEach { dependsOn(tasks.named("downloadAAR")) }
 
 publishing {
    
