@@ -71,7 +71,6 @@ publishing {
             artifact(downloadedAar) {
                 builtBy(tasks.named("prepareArtifact"))
                 extension = 'aar'
-                type = 'aar'   // Optional, Gradle uses it internally; POM will not break
             }
         }
     }
