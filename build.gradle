@@ -24,27 +24,15 @@ if (!libVersion) {
     throw new GradleException("You must provide -Pversion=<version>")
 }
 def downloadedAar = layout.buildDirectory.file("downloads/external-lib.aar")
-def outputAarName = "carto-mobile-sdk-android-${libVersion}.aar"
-def outputAar = layout.buildDirectory.file("output/aar/$outputAarName")
 
 tasks.register('downloadExternalAar', de.undercouch.gradle.tasks.download.Download) {
     src aarUrl
     dest downloadedAar
     onlyIfModified true
     doLast {
-        // Optionally copy to build/libs if you want
         println "Downloaded AAR: ${downloadedAar.get().asFile}, size: ${downloadedAar.get().asFile.length()} bytes"
     }
 }
-
-// tasks.register("prepareArtifact") {
-//     dependsOn("downloadExternalAar")
-//     doLast {
-//         // Optionally copy to build/libs if you want
-//         println "Downloaded AAR: ${downloadedAar.get().asFile}, size: ${downloadedAar.get().asFile.length()} bytes"
-//     }
-// }
-
 publishing {
    
     publications {
