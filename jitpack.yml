@@ -8,4 +8,4 @@ install:
   - ./gradlew publish
 env:
    VERSION: "5.0.0"
-   AAR_URL: "https://github.com/Akylas/mobile-sdk/releases/download/5.0.0/carto-mobile-sdk-android-5.0.0.aar"
+   AAR_URL: "https://github.com/Akylas/mobile-sdk/releases/download/v5.0.0/carto-mobile-sdk-android-5.0.0.aar"
