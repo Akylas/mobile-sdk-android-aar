@@ -13,16 +13,12 @@ plugins {
     id 'maven-publish'
 }
 
-// Configuration: version and lists of AAR URLs and variant names
+// Configuration
 def libVersion = project.findProperty("version") ?: System.getenv("VERSION") ?: ""
 def aarUrlsProp = project.findProperty("aarUrls") ?: System.getenv("AAR_URLS") ?: ""
 def variantsProp = project.findProperty("variants") ?: System.getenv("VARIANTS") ?: ""
-// When true, publish classifier artifacts for all variants (recommended).
-// The first variant will additionally be published as the default artifact (no classifier)
-// to preserve backward compatibility.
 def useClassifier = (project.findProperty("useClassifier") ?: System.getenv("USE_CLASSIFIER") ?: "true").toBoolean()
 
-// Base coordinates (defaults chosen to keep JitPack-style coordinates)
 def baseGroup = project.findProperty("groupId") ?: System.getenv("GROUP_ID") ?: "com.github.Akylas"
 def baseArtifact = project.findProperty("artifactId") ?: System.getenv("ARTIFACT_ID") ?: "mobile-sdk-android-aar"
 
@@ -37,7 +33,6 @@ def aarUrls = aarUrlsProp.split(',').collect { it.trim() }.findAll { it }
 def variants = variantsProp ? variantsProp.split(',').collect { it.trim() }.findAll { it } : []
 
 if (variants.size() == 0) {
-    // Derive simple variant names from filenames if no variants provided
     variants = aarUrls.collect { url ->
         def file = url.tokenize('/').last()
         def name = file.replaceAll(/\.aar$/, '').replaceAll(/[^A-Za-z0-9_\-]/, '_')
@@ -49,11 +44,11 @@ if (variants.size() != aarUrls.size()) {
     throw new GradleException("aarUrls and variants must have the same number of entries (or omit variants to auto-derive).")
 }
 
-// Ensure one "default" publication exists if using classifier mode: the first variant will be the default
+def downloadsDir = layout.buildDirectory.dir("downloads")
+
 aarUrls.eachWithIndex { url, idx ->
     def variant = variants[idx]
-
-    def downloadedAar = layout.buildDirectory.file("downloads/${variant}.aar")
+    def downloadedAar = downloadsDir.file("${variant}.aar")
     def downloadTaskName = "downloadExternalAar_${variant}"
 
     tasks.register(downloadTaskName, de.undercouch.gradle.tasks.download.Download) {
@@ -64,70 +59,63 @@ aarUrls.eachWithIndex { url, idx ->
             println "Downloaded AAR for variant '${variant}': ${downloadedAar.get().asFile}, size: ${downloadedAar.get().asFile.length()} bytes"
         }
     }
+}
 
-    // Configure publications inside the publishing block below; we create them dynamically
-    publishing {
-        publications {
-            // If useClassifier is true we create classifier publications for each variant
-            if (useClassifier) {
-                create(variant, MavenPublication) {
-                    groupId = baseGroup
-                    artifactId = baseArtifact
-                    version = libVersion
+// Single publication that attaches multiple artifacts (classifiers) to avoid GAV collisions
+publishing {
+    publications {
+        create("release", MavenPublication) {
+            groupId = baseGroup
+            artifactId = baseArtifact
+            version = libVersion
+
+            // Attach first variant as default artifact for backward compatibility.
+            // Also attach classifier artifacts for all variants (including the first).
+            aarUrls.eachWithIndex { url, idx ->
+                def variant = variants[idx]
+                def downloadedAar = downloadsDir.file("${variant}.aar")
+                def downloadTaskName = tasks.named("downloadExternalAar_${variant}")
+
+                if (useClassifier) {
+                    // For the first variant attach no-classifier main artifact (so old deps work)
+                    if (idx == 0) {
+                        artifact(downloadedAar) {
+                            builtBy(downloadTaskName)
+                            extension = 'aar'
+                        }
+                    }
+                    // Attach as classifier (so consumers can request variant via classifier)
                     artifact(downloadedAar) {
-                        builtBy(tasks.named(downloadTaskName))
+                        builtBy(downloadTaskName)
                         extension = 'aar'
                         classifier = variant
                     }
-                }
-
-                // For the first variant also create the default artifact (no classifier)
-                if (idx == 0) {
-                    create("release", MavenPublication) {
-                        groupId = baseGroup
-                        artifactId = baseArtifact
-                        version = libVersion
-                        artifact(downloadedAar) {
-                            builtBy(tasks.named(downloadTaskName))
-                            extension = 'aar'
-                            // no classifier -> this becomes the artifact returned by
-                            // implementation 'com.github.Akylas:mobile-sdk-android-aar:VERSION'
-                        }
-                    }
-                }
-            } else {
-                // If not using classifier, publish distinct artifactIds per variant,
-                // and for compatibility publish the first variant as the base artifactId
-                if (idx == 0) {
-                    create("release", MavenPublication) {
-                        groupId = baseGroup
-                        artifactId = baseArtifact
-                        version = libVersion
-                        artifact(downloadedAar) {
-                            builtBy(tasks.named(downloadTaskName))
-                            extension = 'aar'
-                        }
-                    }
                 } else {
-                    create(variant, MavenPublication) {
-                        groupId = baseGroup
-                        artifactId = "${baseArtifact}-${variant}"
-                        version = libVersion
+                    // If not using classifier, attach first as main artifact and create separate publications
+                    if (idx == 0) {
                         artifact(downloadedAar) {
-                            builtBy(tasks.named(downloadTaskName))
+                            builtBy(downloadTaskName)
                             extension = 'aar'
+                        }
+                    } else {
+                        // create separate publication for other variants with distinct artifactId
+                        create(variant, MavenPublication) {
+                            groupId = baseGroup
+                            artifactId = "${baseArtifact}-${variant}"
+                            version = libVersion
+                            artifact(downloadedAar) {
+                                builtBy(downloadTaskName)
+                                extension = 'aar'
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 
-publishing {
     repositories {
         maven {
-            // This points to the local Maven repository that JitPack reads
             url = uri(System.getProperty("user.home") + "/.m2/repository")
         }
     }
