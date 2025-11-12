@@ -44,11 +44,10 @@ if (variants.size() != aarUrls.size()) {
     throw new GradleException("aarUrls and variants must have the same number of entries (or omit variants to auto-derive).")
 }
 
-def downloadsDir = layout.buildDirectory.dir("downloads")
-
+// NOTE: use layout.buildDirectory.file("downloads/${variant}.aar") per-variant to avoid MappingProvider.file() error
 aarUrls.eachWithIndex { url, idx ->
     def variant = variants[idx]
-    def downloadedAar = downloadsDir.file("${variant}.aar")
+    def downloadedAar = layout.buildDirectory.file("downloads/${variant}.aar") // <- fixed here
     def downloadTaskName = "downloadExternalAar_${variant}"
 
     tasks.register(downloadTaskName, de.undercouch.gradle.tasks.download.Download) {
@@ -69,36 +68,30 @@ publishing {
             artifactId = baseArtifact
             version = libVersion
 
-            // Attach first variant as default artifact for backward compatibility.
-            // Also attach classifier artifacts for all variants (including the first).
             aarUrls.eachWithIndex { url, idx ->
                 def variant = variants[idx]
-                def downloadedAar = downloadsDir.file("${variant}.aar")
+                def downloadedAar = layout.buildDirectory.file("downloads/${variant}.aar")
                 def downloadTaskName = tasks.named("downloadExternalAar_${variant}")
 
                 if (useClassifier) {
-                    // For the first variant attach no-classifier main artifact (so old deps work)
                     if (idx == 0) {
                         artifact(downloadedAar) {
                             builtBy(downloadTaskName)
                             extension = 'aar'
                         }
                     }
-                    // Attach as classifier (so consumers can request variant via classifier)
                     artifact(downloadedAar) {
                         builtBy(downloadTaskName)
                         extension = 'aar'
                         classifier = variant
                     }
                 } else {
-                    // If not using classifier, attach first as main artifact and create separate publications
                     if (idx == 0) {
                         artifact(downloadedAar) {
                             builtBy(downloadTaskName)
                             extension = 'aar'
                         }
                     } else {
-                        // create separate publication for other variants with distinct artifactId
                         create(variant, MavenPublication) {
                             groupId = baseGroup
                             artifactId = "${baseArtifact}-${variant}"
