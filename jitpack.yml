@@ -10,4 +10,4 @@ env:
   VERSION: "5.0.1"
   USE_CLASSIFIER: "true"
   VARIANTS: "valhalla,core,lite"
-  AAR_URLS: "https://github.com/Akylas/mobile-sdk/releases/download/5.0.1/carto-mobile-sdk-android-5.0.1-valhalla.aar,https://github.com/Akylas/mobile-sdk/releases/download/5.0.1/carto-mobile-sdk-android-5.0.1-core.aar,https://github.com/Akylas/mobile-sdk/releases/download/5.0.1/carto-mobile-sdk-android-5.0.1-lite.aar"
+  AAR_URLS: "https://github.com/Akylas/mobile-sdk/releases/download/v5.0.1/carto-mobile-sdk-android-5.0.1-valhalla.aar,https://github.com/Akylas/mobile-sdk/releases/download/v5.0.1/carto-mobile-sdk-android-5.0.1-core.aar,https://github.com/Akylas/mobile-sdk/releases/download/v5.0.1/carto-mobile-sdk-android-5.0.1-lite.aar"
