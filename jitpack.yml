@@ -7,7 +7,9 @@ gradle:
 install:
   - ./gradlew publish
 env:
-  VERSION: "5.1.0"
+  VERSION: "5.2.0"
   USE_CLASSIFIER: "true"
-  VARIANTS: "valhalla,core,lite"
-  AAR_URLS: "https://github.com/Akylas/mobile-sdk/releases/download/v5.1.0/carto-mobile-sdk-android-5.1.0-valhalla.aar,https://github.com/Akylas/mobile-sdk/releases/download/v5.1.0/carto-mobile-sdk-android-5.1.0-core.aar,https://github.com/Akylas/mobile-sdk/releases/download/v5.1.0/carto-mobile-sdk-android-5.1.0-lite.aar"
+  VARIANTS: "full,core,lite"
+  AAR_URLS: "https://github.com/Akylas/mobile-sdk/releases/download/v5.2.0/carto-mobile-sdk-android-5.2.0-full.aar,https://github.com/Akylas/mobile-sdk/releases/download/v5.2.0/carto-mobile-sdk-android-5.2.0-core.aar,https://github.com/Akylas/mobile-sdk/releases/download/v5.2.0/carto-mobile-sdk-android-5.2.0-lite.aar"
+  ROUTING_AAR_URL: "https://github.com/Akylas/mobile-sdk/releases/download/v5.2.0/carto-routing-android-5.2.0.aar"
+
